@@ -5,7 +5,7 @@ using UnityEngine;
 //using System.Linq;
 using System.Text;
 
-//	0.3a00.3b00
+//	0.4a00.3b00
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(CapsuleCollider))]
 public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
@@ -19,10 +19,12 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	public float Player_Turnning_Speed=72f; //72 degree per second
 	public float Cam_Move_Speed=1f;
 
-	public bool Move_Player_towards_Character_Facing = false;
-	public bool Move_Player_Along_World_Axis = false;
-	public bool Turn_Player_by_Keyboard = false;
-	public bool Turn_Player_by_Mouse_Point = false;
+	public bool Move_Player_towards_Character_Facing = false;	//	WASD control forward/ backward/ left shift/ right shift
+	public bool Move_Player_Along_World_Axis = false;	//	WASD control forward/ backward/ left shift/ right shift
+	public bool Turn_Player_by_Keyboard = false;	//	QE control turn left/ turn right
+	public bool Turn_Player_by_Mouse_Point = false;	//	turn to mouse position
+
+	public bool Move_Or_Turn_Player_According_To_Camera = false;	//	WASD control forward/ backward/ left shift or turn left by Camera behavior/ right shift or turn right by Camera behavior
 
 	public bool Move_Camera_towards_cam_Facing = false;
 	public bool Move_Camera_Along_World_Axis = false;
@@ -47,6 +49,8 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	private Vector3 curMousPos;
 
 	private bool camFollowFlag;
+
+	private float newYAng;
 
 	// Use this for initialization
 	void Start () {
@@ -108,6 +112,11 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 				}
 			}
 
+			if (Move_Or_Turn_Player_According_To_Camera) {
+				//	move or turn by keyboard according camera behavior
+				MoTbKaCB (moveFB, moveLR, speed, turnSpeed, retreatDivisor);
+			}
+
 			Animating (moveFB, moveLR);	//	Animation management
 
 		} else {	//	if not follow then move camera center point directilly, keyboard now control camera
@@ -151,6 +160,43 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	/********************************
 	 * --- Functions
 	 ********************************/
+
+	//	move or turn by keyboard according camera behavior, typical RPG control system
+	//	FB: forward/backward, LR: Left/Right, SP: Speed, RD: retreatDivisor
+	private void MoTbKaCB (float FB, float LR, float movSP, float turnSP, float RD) {
+		bool camTurnAsPlayer = Cam_Center_Point.GetComponent <CameraFunctions> ().followTurnning;
+		float tarYAng = Cam_Center_Point.transform.eulerAngles.y;
+
+		//debug
+		if (camTurnAsPlayer) { 
+			newYAng = tarYAng;	//	initialize value in first run
+			Cam_Center_Point.GetComponent <CameraFunctions> ().followTurnning = false;
+		}
+
+		if (LR > 0f) {
+			newYAng = tarYAng + 90;
+			if (FB > 0f) newYAng -= 45;
+			else if (FB < 0f) newYAng += 45;
+		} else if (LR < 0f) {
+			newYAng = tarYAng - 90;
+			if (FB > 0f) newYAng += 45;
+			else if (FB < 0f) newYAng -= 45;
+		} else if (FB < 0f) {
+			newYAng = tarYAng - 180;
+		}
+
+		Debug.Log (newYAng);
+		Quaternion tempQuat = Quaternion.Euler (new Vector3 (0f, newYAng, 0f));
+		Quaternion newAng = Quaternion.RotateTowards (transform.rotation, tempQuat, turnSP * Time.deltaTime);
+
+		playerRigidbody.MoveRotation (newAng);
+
+		//move forward on charactor faceing basis on the direction of Camera
+		//moveCalculation = (transform.forward * newFB) + (transform.right * newLR);
+		moveCalculation = (Cam_Center_Point.transform.forward * FB) + (Cam_Center_Point.transform.right * LR);
+
+		playerRigidbody.MovePosition (transform.position + moveCalculation.normalized * movSP * Time.deltaTime);
+	}
 
 	//	RTS style Point Selection
 	private void RTS_Point_Selec (bool mousLBdown) {
