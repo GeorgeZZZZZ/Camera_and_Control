@@ -310,6 +310,7 @@ MonoBehaviour:
   Mouse_Scroll_Sensitivity: 80
   Mouse_Scroll_SmoothDamp: 0.08
   Look_SmoothDamp: 0.05
+  Player_Follow_SmoothDamp: 0.25
   Max_Cam_Distance: 4
   Min_Cam_Distance: 0.8
   Max_X_Rotation_Angle: 80
@@ -324,14 +325,16 @@ MonoBehaviour:
   RTS_Sec_Cam_Distance: 15
   RPG_Mid_Mous_Rote_Cam: 0
   RPG_Edge_Rote_Cam: 0
-  RPG_Dir_Rote_Cam: 0
+  RPG_Dir_Rote_Cam: 1
+  RPG_Complet_Cam_Follow: 0
+  RPG_Classic_Cam_Follow: 1
   RTS_Plan_Fir_View_Flag: 1
   RTS_Plan_Sec_View_Flag: 0
   RTS_Mid_Mous_Rote_Cam: 1
+  RTS_Complet_Cam_Follow: 1
   Move_Debug: 1
   followPlayerFlag: 1
   mousMoveFlag: 0
-  followTurnning: 1
 --- !u!4 &277307233
 Transform:
   m_ObjectHideFlags: 0
@@ -1666,6 +1669,7 @@ MonoBehaviour:
   Move_Camera_towards_cam_Facing: 1
   Move_Camera_Along_World_Axis: 0
   Force_RTS_Cam_View: 0
+  characterMovingFlag: 0
 --- !u!54 &1919781155
 Rigidbody:
   m_ObjectHideFlags: 0

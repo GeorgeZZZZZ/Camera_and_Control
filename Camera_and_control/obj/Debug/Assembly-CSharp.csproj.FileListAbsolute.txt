@@ -87,6 +87,7 @@ G:\Unity Projects\Camera_and_Control_System\Camera_and_control\Temp\bin\Debug\Un
 G:\Unity Projects\Camera_and_Control_System\Camera_and_control\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 G:\Unity Projects\Camera_and_Control_System\Camera_and_control\obj\Debug\Assembly-CSharp.dll
 G:\Unity Projects\Camera_and_Control_System\Camera_and_control\obj\Debug\Assembly-CSharp.pdb
+G:\Unity Projects\Camera_and_control\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 G:\Unity Projects\Camera_and_control\Temp\bin\Debug\Assembly-CSharp.dll
 G:\Unity Projects\Camera_and_control\Temp\bin\Debug\Assembly-CSharp.pdb
 G:\Unity Projects\Camera_and_control\Temp\bin\Debug\UnityEditor.dll
@@ -113,6 +114,5 @@ G:\Unity Projects\Camera_and_control\Temp\bin\Debug\UnityEngine.PlaymodeTestsRun
 G:\Unity Projects\Camera_and_control\Temp\bin\Debug\UnityEngine.Analytics.xml
 G:\Unity Projects\Camera_and_control\Temp\bin\Debug\UnityEngine.HoloLens.xml
 G:\Unity Projects\Camera_and_control\Temp\bin\Debug\UnityEngine.VR.xml
-G:\Unity Projects\Camera_and_control\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
 G:\Unity Projects\Camera_and_control\obj\Debug\Assembly-CSharp.dll
 G:\Unity Projects\Camera_and_control\obj\Debug\Assembly-CSharp.pdb

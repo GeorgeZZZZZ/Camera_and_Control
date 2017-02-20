@@ -5,7 +5,7 @@ using UnityEngine;
 //using System.Linq;
 using System.Text;
 
-//	0.4a00.3b00
+//	0.5.3
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(CapsuleCollider))]
 public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
@@ -30,6 +30,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	public bool Move_Camera_Along_World_Axis = false;
 
 	public bool Force_RTS_Cam_View = false;	//	Force enter RTS view mode, not perfect yet
+	[HideInInspector] public bool characterMovingFlag = false;	//	flag is true if get input for character move
 
 	private Camera playerCam;
 	private Vector3 moveCalculation;
@@ -50,7 +51,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 	private bool camFollowFlag;
 
-	private float newYAng;
+	private float newYAng;	//	y angle container, for MoTbKaCB () to calculate next character y angle depending on camera center
 
 	// Use this for initialization
 	void Start () {
@@ -62,12 +63,17 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 		playerRigidbody.angularDrag = Mathf.Infinity;	//prevant character keep turn not stop after finish rotation
 		anim = GetComponent <Animator> ();
 		playerCam = Cam_Center_Point.GetComponent <CameraFunctions> ().Cam_Obj.GetComponent <Camera> ();
+
+		newYAng = transform.eulerAngles.y;	//	initialize value in first run
 	}
 
 	// Update is called once per physics update
 	void FixedUpdate () {
 
 		DEBUG ();	//	Call debug functions
+
+		float moveFBForAnimeRPG = 0f;
+		float moveLRForAnimeRPG = 0f;
 
 		//	get physics input
 		float moveFB = Input.GetAxis ("Vertical");
@@ -76,6 +82,11 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 		bool mousLefButtDow = Input.GetMouseButtonDown (0);
 		bool mousLefButtUp = Input.GetMouseButtonUp (0);
 
+		if (moveFB != 0f | moveLR != 0f)
+			characterMovingFlag = true;
+		else
+			characterMovingFlag = false;
+		
 		//when push shift button, not only increase walking speed also increase turning speed
 		if (Input.GetButton ("Run")){
 			speed = Player_Run_Speed;
@@ -100,6 +111,8 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 					//	Move Player towards Character Facing
 					MPtCF (moveFB, moveLR, speed, retreatDivisor);
 				}
+				moveFBForAnimeRPG = moveFB;
+				moveLRForAnimeRPG = moveLR;
 			}
 
 			if (Turn_Player_by_Mouse_Point) {
@@ -117,14 +130,12 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 				MoTbKaCB (moveFB, moveLR, speed, turnSpeed, retreatDivisor);
 			}
 
-			Animating (moveFB, moveLR);	//	Animation management
-
 		} else {	//	if not follow then move camera center point directilly, keyboard now control camera
 			
 			float movXOff, movZOff;
 			Edge_Move_Control (out movXOff, out movZOff);	//	give offset velue by detect if mouse move near screen edge
 
-			moveLR = turnLR;	//	make A/D key to control Camera left and right movement
+			//moveLR = turnLR;	//	make A/D key to control Camera left and right movement
 
 			moveFB += movXOff;
 			moveLR += movZOff;
@@ -144,6 +155,8 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 			RTS_Area_Selec (mousLefButtDow, mousLefButtUp);
 		}
+
+		Animating (moveFBForAnimeRPG, moveLRForAnimeRPG);	//	Animation management
 	}
 
 	void OnGUI() {
@@ -164,38 +177,63 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	//	move or turn by keyboard according camera behavior, typical RPG control system
 	//	FB: forward/backward, LR: Left/Right, SP: Speed, RD: retreatDivisor
 	private void MoTbKaCB (float FB, float LR, float movSP, float turnSP, float RD) {
-		bool camTurnAsPlayer = Cam_Center_Point.GetComponent <CameraFunctions> ().followTurnning;
 		float tarYAng = Cam_Center_Point.transform.eulerAngles.y;
+		float curYAng = transform.eulerAngles.y;
 
 		//debug
-		if (camTurnAsPlayer) { 
-			newYAng = tarYAng;	//	initialize value in first run
-			Cam_Center_Point.GetComponent <CameraFunctions> ().followTurnning = false;
+		/*
+		if (Cam_Center_Point.GetComponent <CameraFunctions> ().turnCompleteFollowFlag) 
+			Cam_Center_Point.GetComponent <CameraFunctions> ().turnCompleteFollowFlag = false;
+		if (!Cam_Center_Point.GetComponent <CameraFunctions> ().turnRPGFollowFlag)
+			Cam_Center_Point.GetComponent <CameraFunctions> ().turnRPGFollowFlag = true;
+		*/
+		if (LR > 0f) {	//	if character is shiftting right
+			newYAng = tarYAng + 90f;
+			if (FB > 0f)
+				newYAng -= 45f;
+			else if (FB < 0f)
+				newYAng += 45f;
+		} else if (LR < 0f) {	//	if character is shiftting left
+			newYAng = tarYAng - 90f;
+			if (FB > 0f)
+				newYAng += 45;
+			else if (FB < 0f)
+				newYAng -= 45f;
+		} else if (FB > 0f) {	//	if character is moving forward
+			newYAng = tarYAng;
+		} else if (FB < 0f) {	//	if character is moving backward
+
+			//	prenvent character and camera stuck at certain point and making camera shake badly
+			float curBackAng = curYAng + 180f;	//	safety value for judgement after character move pass 0 point
+			float tarBackAng = tarYAng + 180f;	//	safety value for judgement after camera center move pass 0 point
+			if (curBackAng > 360f)	//	make sure value is in 360
+				curBackAng -= 360f;
+			if (tarBackAng > 360f)
+				tarBackAng -= 360f;
+			if (tarYAng <= curYAng) {	
+				if (tarBackAng > curBackAng & tarYAng < curBackAng)	
+					newYAng = tarYAng - 179f;	//	if character direction is at right of the camera center direction
+				else
+					newYAng = tarYAng + 179f;
+			} else if (tarYAng > curYAng) {
+				if (tarBackAng <= curBackAng & tarYAng > curBackAng)
+					newYAng = tarYAng + 179f;	//	if character direction is at left of the camera center direction
+				else
+					newYAng = tarYAng - 179f;
+			} 
 		}
 
-		if (LR > 0f) {
-			newYAng = tarYAng + 90;
-			if (FB > 0f) newYAng -= 45;
-			else if (FB < 0f) newYAng += 45;
-		} else if (LR < 0f) {
-			newYAng = tarYAng - 90;
-			if (FB > 0f) newYAng += 45;
-			else if (FB < 0f) newYAng -= 45;
-		} else if (FB < 0f) {
-			newYAng = tarYAng - 180;
-		}
-
-		Debug.Log (newYAng);
 		Quaternion tempQuat = Quaternion.Euler (new Vector3 (0f, newYAng, 0f));
 		Quaternion newAng = Quaternion.RotateTowards (transform.rotation, tempQuat, turnSP * Time.deltaTime);
 
-		playerRigidbody.MoveRotation (newAng);
+		if (transform.eulerAngles.y != newAng.eulerAngles.y)
+			playerRigidbody.MoveRotation (newAng);
 
-		//move forward on charactor faceing basis on the direction of Camera
-		//moveCalculation = (transform.forward * newFB) + (transform.right * newLR);
-		moveCalculation = (Cam_Center_Point.transform.forward * FB) + (Cam_Center_Point.transform.right * LR);
-
-		playerRigidbody.MovePosition (transform.position + moveCalculation.normalized * movSP * Time.deltaTime);
+		if (FB != 0 | LR != 0) {
+			//move forward on charactor faceing basis on the direction of Camera
+			moveCalculation = (Cam_Center_Point.transform.forward * FB) + (Cam_Center_Point.transform.right * LR);
+			playerRigidbody.MovePosition (transform.position + moveCalculation.normalized * movSP * Time.deltaTime);
+		}
 	}
 
 	//	RTS style Point Selection
