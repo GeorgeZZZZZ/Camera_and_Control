@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//	0.2.0
+//	0.3.0
 public class Public_Functions : MonoBehaviour {
 
 	// Smooth Angle transform function
@@ -39,6 +39,25 @@ public class Public_Functions : MonoBehaviour {
 			return (-360f + newAng);
 		} else {
 			return newAng;
+		}
+	}
+
+	public static bool Mous_Click_Get_Pos_Dir (Camera cam,Transform curTrans,int maskIn,out Vector3 hitPos, out Quaternion tarRote) {
+		
+		Ray camRay = cam.ScreenPointToRay (Input.mousePosition);
+		RaycastHit floorHit;
+
+		if (Physics.Raycast (camRay, out floorHit, 100f, maskIn)) {
+			hitPos = floorHit.point;
+			Vector3 playerToMouse = floorHit.point - curTrans.position;
+			playerToMouse.y = 0f;
+			tarRote = Quaternion.LookRotation (playerToMouse);
+
+			return true;
+		} else {
+			hitPos = Vector3.zero;
+			tarRote = Quaternion.Euler (Vector3.zero);	//	has to return 0
+			return false;
 		}
 	}
 }

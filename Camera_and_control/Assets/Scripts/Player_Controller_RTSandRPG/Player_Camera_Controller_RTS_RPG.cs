@@ -6,8 +6,10 @@ using UnityEngine;
 using System.Text;
 
 //	0.5.3
+[RequireComponent (typeof(Animator))]
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(CapsuleCollider))]
+[RequireComponent (typeof(Selectable_Unit_Controller))]
 public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 	public GameObject Cam_Center_Point;
@@ -16,7 +18,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	public int Edge_Boundary = 1;	//	valuable use for detect limit movement which mouse move near screen edge, unit in pixel 
 	public float Player_Normal_Speed=1f;
 	public float Player_Run_Speed=2.5f;
-	public float Player_Turnning_Speed=72f; //72 degree per second
+	public float Player_Turnning_Speed=180f; //180 degree per second
 	public float Cam_Move_Speed=1f;
 
 	public bool Move_Player_towards_Character_Facing = false;	//	WASD control forward/ backward/ left shift/ right shift
@@ -41,11 +43,6 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	private float turnSpeed;
 	private float retreatDivisor = 2f; // when character go backward or sideward, he's run and walk speed will divide by this number
 
-	//---valuables for TbMP()
-	private int floorMask;
-	private float camRayLength = 100f;
-	//---
-
 	private bool mouseAreaSelec = false;	//	mouse area selecting flag
 	private Vector3 curMousPos;
 
@@ -55,8 +52,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
-		floorMask = LayerMask.GetMask ("floor");		//Give a mask to floor layer for camRay in TURNING() to hit for, used by Tbmp()
+		
 		playerRigidbody = GetComponent <Rigidbody> ();
 		playerRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;		//freeze rigidbody's rotation to prevent fall down to floor
 		playerRigidbody.drag = Mathf.Infinity;
@@ -79,8 +75,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 		float moveFB = Input.GetAxis ("Vertical");
 		float moveLR = Input.GetAxis ("Horizontal");
 		float turnLR = Input.GetAxisRaw ("Rotate");
-		bool mousLefButtDow = Input.GetMouseButtonDown (0);
-		bool mousLefButtUp = Input.GetMouseButtonUp (0);
+		bool mousLefButt = Input.GetMouseButton (0);
 
 		if (moveFB != 0f | moveLR != 0f)
 			characterMovingFlag = true;
@@ -151,12 +146,12 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 				}
 			}
 
-			RTS_Point_Selec (mousLefButtDow);
+			RTS_Point_Selec (mousLefButt);
 
-			RTS_Area_Selec (mousLefButtDow, mousLefButtUp);
+			RTS_Area_Selec (mousLefButt);
 		}
-
-		Animating (moveFBForAnimeRPG, moveLRForAnimeRPG);	//	Animation management
+		if (camFollowFlag)
+			Animating (moveFBForAnimeRPG, moveLRForAnimeRPG);	//	Animation management
 	}
 
 	void OnGUI() {
@@ -237,33 +232,33 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	}
 
 	//	RTS style Point Selection
-	private void RTS_Point_Selec (bool mousLBdown) {
+	private void RTS_Point_Selec (bool mousLB) {
 		
 		//	search obj which contain Selectable_Unit_Controller.cs
-		if (mousLBdown) {
+		if (mousLB & !mouseAreaSelec) {
 			
 			//	cast a ray from camera and go through mouse position
 			Ray camMousRay = playerCam.ScreenPointToRay (Input.mousePosition);
 			RaycastHit selectionHit;
 
 			//	cast a ray from camera and go through mouse position
-			foreach (var selObj in FindObjectsOfType <Selectable_Unit_Controller>()) {
+			foreach (var selectableObj in FindObjectsOfType <Selectable_Unit_Controller>()) {
 
 				/******************
 				 * may need add code for selected obj in to a global list for AI control at here
 				 ******************/
 
 				if (Physics.Raycast (camMousRay, out selectionHit, 50f)) {
-					if (selObj.GetComponent <Collider> ().bounds.Contains (selectionHit.point)) {
-						if (selObj.selectionCircle == null) {
-							selObj.selectionCircle = Instantiate (Select_Circle_Prefab);
-							selObj.selectionCircle.transform.SetParent (selObj.transform, false);
-							selObj.selectionCircle.transform.eulerAngles = new Vector3 (90, 0, 0);
+					if (selectableObj.GetComponent <Collider> ().bounds.Contains (selectionHit.point)) {
+						if (selectableObj.selectionCircle == null) {
+							selectableObj.selectionCircle = Instantiate (Select_Circle_Prefab);
+							selectableObj.selectionCircle.transform.SetParent (selectableObj.transform, false);
+							selectableObj.selectionCircle.transform.eulerAngles = new Vector3 (90, 0, 0);
 						}
 					} else {
-						if (selObj.selectionCircle != null) {
-							Destroy (selObj.selectionCircle.gameObject);
-							selObj.selectionCircle = null;
+						if (selectableObj.selectionCircle != null) {
+							Destroy (selectableObj.selectionCircle.gameObject);
+							selectableObj.selectionCircle = null;
 						}
 					}
 				}
@@ -272,29 +267,30 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 	}
 
 	//	RTS style Area Selection
-	private void RTS_Area_Selec (bool mousLBdown, bool mousLBup) {
+	private void RTS_Area_Selec (bool mousLB) {
 		
 		//	if press left mouse button start draw square
-		if (mousLBdown) {
+		if (mousLB & !mouseAreaSelec) {
 			mouseAreaSelec = true;
 			curMousPos = Input.mousePosition;
 		}
 
 		//	if release left mouse button stop draw square
-		if (mousLBup) {
+		//	original detect mousLefButtUp, but some times can't get release signal
+		if (!mousLB) {
 			mouseAreaSelec = false;
 		}
 
 		//	use projector give a circle under selected unity
 		if (mouseAreaSelec) {
 			//	search obj which contain component Selectable_Unit_Controller.cs
-			foreach (var selObj in FindObjectsOfType <Selectable_Unit_Controller>()) {
+			foreach (var selectableObj in FindObjectsOfType <Selectable_Unit_Controller>()) {
 				//	call judgement function and see if obj is in selection area
-				if (IsWithinSelectionBounds (selObj.gameObject)) {
-					if (selObj.selectionCircle == null) {
-						selObj.selectionCircle = Instantiate (Select_Circle_Prefab);
-						selObj.selectionCircle.transform.SetParent( selObj.transform, false );
-						selObj.selectionCircle.transform.eulerAngles = new Vector3( 90, 0, 0 );
+				if (IsWithinSelectionBounds (selectableObj.gameObject)) {
+					if (selectableObj.selectionCircle == null) {
+						selectableObj.selectionCircle = Instantiate (Select_Circle_Prefab);
+						selectableObj.selectionCircle.transform.SetParent( selectableObj.transform, false );
+						selectableObj.selectionCircle.transform.eulerAngles = new Vector3( 90, 0, 0 );
 					}
 				} 
 			}
@@ -409,18 +405,13 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 	//	Turning Player by Mouse Pointing
 	void TPbMP(){
-		Ray camRay = playerCam.ScreenPointToRay (Input.mousePosition);
+		Quaternion roteTo;
+		Vector3 mousHitPos;
 
-		RaycastHit floorHit;
-
-		if (Physics.Raycast (camRay, out floorHit, camRayLength, floorMask)) {
-			
-			Vector3 playerToMouse = floorHit.point - transform.position;
-			playerToMouse.y = 0f;
-			Quaternion tbmpRotation = Quaternion.LookRotation (playerToMouse);
-
-			playerRigidbody.MoveRotation (tbmpRotation);
+		if (Public_Functions.Mous_Click_Get_Pos_Dir (playerCam, transform, LayerMask.GetMask ("floor"), out mousHitPos, out roteTo)) {
+			playerRigidbody.MoveRotation (roteTo);
 		}
+		
 	}
 
 	//	Animation management
