@@ -5,7 +5,7 @@ using UnityEngine;
 //using System.Linq;
 using System.Text;
 
-//	0.5.3
+//	0.5.4
 [RequireComponent (typeof(Animator))]
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(CapsuleCollider))]
@@ -30,6 +30,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 	public bool Move_Camera_towards_cam_Facing = false;
 	public bool Move_Camera_Along_World_Axis = false;
+	public bool Move_Camera_at_Edge = false;
 
 	public bool Force_RTS_Cam_View = false;	//	Force enter RTS view mode, not perfect yet
 	[HideInInspector] public bool characterMovingFlag = false;	//	flag is true if get input for character move
@@ -126,15 +127,16 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 			}
 
 		} else {	//	if not follow then move camera center point directilly, keyboard now control camera
-			
-			float movXOff, movZOff;
-			Edge_Move_Control (out movXOff, out movZOff);	//	give offset velue by detect if mouse move near screen edge
 
-			//moveLR = turnLR;	//	make A/D key to control Camera left and right movement
+			if (Move_Camera_at_Edge) {
+				float movXOff, movZOff;
+				Edge_Move_Control (out movXOff, out movZOff);	//	give offset velue by detect if mouse move near screen edge
 
-			moveFB += movXOff;
-			moveLR += movZOff;
+				//moveLR = turnLR;	//	make A/D key to control Camera left and right movement
 
+				moveFB += movXOff;
+				moveLR += movZOff;
+			}
 			//	only call MDCtCF() when camera received movement command
 			if (moveFB != 0f || moveLR != 0f) {
 				if (Move_Camera_Along_World_Axis) {
