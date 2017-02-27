@@ -56,7 +56,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 		
 		playerRigidbody = GetComponent <Rigidbody> ();
 		playerRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;		//freeze rigidbody's rotation to prevent fall down to floor
-		playerRigidbody.drag = Mathf.Infinity;
+		//playerRigidbody.drag = Mathf.Infinity;
 		playerRigidbody.angularDrag = Mathf.Infinity;	//prevant character keep turn not stop after finish rotation
 		anim = GetComponent <Animator> ();
 		playerCam = Cam_Center_Point.GetComponent <CameraFunctions> ().Cam_Obj.GetComponent <Camera> ();
@@ -152,6 +152,7 @@ public class Player_Camera_Controller_RTS_RPG : MonoBehaviour {
 
 			RTS_Area_Selec (mousLefButt);
 		}
+
 		if (camFollowFlag)
 			Animating (moveFBForAnimeRPG, moveLRForAnimeRPG);	//	Animation management
 	}

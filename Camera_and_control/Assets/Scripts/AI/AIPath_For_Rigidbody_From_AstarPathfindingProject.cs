@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Pathfinding;
 using Pathfinding.RVO;
 
-//0.1.0
+//0.1.1
 
 /** AI for following paths.
  * This AI is the default movement script which comes with the A* Pathfinding Project.
@@ -227,7 +227,7 @@ public class AIPath_For_Rigidbody_From_AstarPathfindingProject : MonoBehaviour {
 	 */
 	public float TrySearchPath () {
 		
-		if (Time.time - lastRepath >= repathRate && canSearchAgain && canSearch && newTar != Vector3.zero && newTar != oldTar) {
+		if (Time.time - lastRepath >= repathRate && canSearchAgain && canSearch && newTar != Vector3.zero && newTar != oldTar && canMove) {
 			oldTar = newTar;
 			SearchPath();
 			return repathRate;

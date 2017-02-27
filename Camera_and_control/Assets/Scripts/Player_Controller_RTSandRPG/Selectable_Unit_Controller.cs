@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
 
-//0.3.0
+//0.3.2
 [RequireComponent (typeof(Animator))]
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(Seeker))]
@@ -13,7 +13,9 @@ public class Selectable_Unit_Controller : AIPath_For_Rigidbody_From_AstarPathfin
 	public GameObject selectionCircle;	//	use for add circle above obj after been selected	
 	public GameObject endOfPathEffect;
 
-	private Animator anim;
+	public bool Use_Animation = true;
+
+	private Animator anime;
 	private Vector3 lastTarget;
 	private Vector3 posOffset;
 
@@ -21,8 +23,9 @@ public class Selectable_Unit_Controller : AIPath_For_Rigidbody_From_AstarPathfin
 	private bool mousRBTiggerOnce;
 
 	new void Start (){
-		
-		anim = GetComponent <Animator> ();
+
+		if (GetComponent ("Animator"))
+			anime = GetComponent <Animator> ();
 
 		//	rewrite move speed with master control script
 		if (GetComponent ("Player_Camera_Controller_RTS_RPG") != null) {
@@ -40,21 +43,33 @@ public class Selectable_Unit_Controller : AIPath_For_Rigidbody_From_AstarPathfin
 	}
 
 	new void Update () {
-		
-		if (canMove) {
+		bool camFollowing = false;
+
+		if (GetComponent ("Player_Camera_Controller_RTS_RPG") != null) {
+			camFollowing = GetComponent <Player_Camera_Controller_RTS_RPG> ().Cam_Center_Point.GetComponent <CameraFunctions> ().followPlayerFlag;
+		}
+
+		if (!camFollowing) {
+			if (canMove == false) 
+				canMove = true;
 			//	if obj has been selected
 			if (selectionCircle != null) {
 				Detect_New_pos ();
 			}
 
 			Move ();
+		} else {
+			if (selectionCircle != null) {
+				Destroy (selectionCircle.gameObject);
+				selectionCircle = null;
+			}
+			if (canMove != false)
+				canMove = false;
+			
+			newTar = transform.position;
 		}
 
-		bool camFollowing = false;
-		if (GetComponent ("Player_Camera_Controller_RTS_RPG") != null) {
-			camFollowing = GetComponent <Player_Camera_Controller_RTS_RPG> ().Cam_Center_Point.GetComponent <CameraFunctions> ().followPlayerFlag;
-		}
-		if (!camFollowing)
+		if (!camFollowing && Use_Animation)
 			Animating ();
 	}
 
@@ -112,6 +127,6 @@ public class Selectable_Unit_Controller : AIPath_For_Rigidbody_From_AstarPathfin
 		else
 			walk = false;
 		
-		anim.SetBool ("IsWalking", walk);
+		anime.SetBool ("IsWalking", walk);
 	}
 }
