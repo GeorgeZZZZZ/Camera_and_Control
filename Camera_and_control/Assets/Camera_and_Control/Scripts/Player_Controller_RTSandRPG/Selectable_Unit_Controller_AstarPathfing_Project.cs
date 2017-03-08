@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
 
-//0.3.3
+//0.3.4
 [RequireComponent (typeof(Animator))]
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(Seeker))]
@@ -29,10 +29,10 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 			anime = GetComponent <Animator> ();
 
 		//	rewrite move speed with master control script if their is palyer controll script attached
-		if (GetComponent ("Player_Camera_Controller_RTS_RPG_AstarPathfing_Project") != null) {
-			speed = GetComponent <Player_Camera_Controller_RTS_RPG_AstarPathfing_Project> ().Player_Normal_Speed;
-			Run_Speed = GetComponent <Player_Camera_Controller_RTS_RPG_AstarPathfing_Project> ().Player_Run_Speed;
-			turningSpeed = GetComponent <Player_Camera_Controller_RTS_RPG_AstarPathfing_Project> ().Player_Turnning_Speed;
+		if (GetComponent ("Player_Controller_RTS_RPG_AstarPathfing_Project") != null) {
+			speed = GetComponent <Player_Controller_RTS_RPG_AstarPathfing_Project> ().Player_Normal_Speed;
+			Run_Speed = GetComponent <Player_Controller_RTS_RPG_AstarPathfing_Project> ().Player_Run_Speed;
+			turningSpeed = GetComponent <Player_Controller_RTS_RPG_AstarPathfing_Project> ().Player_Turnning_Speed;
 		}
 
 		//	modify and smooth path calculation
@@ -47,8 +47,8 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 		bool camFollowing = false;
 
 		//	if their is palyer controll script attached then read camera follow state
-		if (GetComponent ("Player_Camera_Controller_RTS_RPG_AstarPathfing_Project") != null) {
-			camFollowing = GetComponent <Player_Camera_Controller_RTS_RPG_AstarPathfing_Project> ().Cam_Center_Point.GetComponent <CameraFunctions> ().followPlayerFlag;
+		if (GetComponent ("Player_Controller_RTS_RPG_AstarPathfing_Project") != null) {
+			camFollowing = GetComponent <Player_Controller_RTS_RPG_AstarPathfing_Project> ().Cam_Center_Point.GetComponent <Camera_Controller> ().followPlayerFlag;
 		}
 
 		//	only start pathfind when player get in to RTS mode

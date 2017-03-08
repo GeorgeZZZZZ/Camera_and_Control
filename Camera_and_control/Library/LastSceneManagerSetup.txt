@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Camera_and_Control/Scenes/simple.unity
+- path: Assets/Camera_and_Control/Scenes/Camera_and_Control_Sample.unity
   isLoaded: 1
   isActive: 1
