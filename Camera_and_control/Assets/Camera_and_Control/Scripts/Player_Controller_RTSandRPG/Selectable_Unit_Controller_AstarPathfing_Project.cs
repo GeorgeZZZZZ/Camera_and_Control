@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
 
-//0.3.4
+//0.4.4
 [RequireComponent (typeof(Animator))]
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(Seeker))]
@@ -23,6 +23,8 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 	private bool mousRBTiggerOnceFlag;
 	private bool mousRBTiggerOnce;
 
+	private float timer = 0f;
+	private bool isRunning;
 	new void Start (){
 
 		if (GetComponent ("Animator"))
@@ -74,6 +76,10 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 
 		if (!camFollowing && Use_Animation)
 			Animating ();
+
+		if (timer > 0) {
+			timer -= Time.deltaTime;
+		}
 	}
 
 	/********************************
@@ -81,7 +87,7 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 	 ********************************/
 	private void Move (){
 		
-		posOffset = Calculate_New_Pos_Dir (tr.position);
+		posOffset = Calculate_New_Pos_Dir (tr.position, isRunning);
 		rigid.MovePosition (transform.position + posOffset);
 
 		if (targetDirection != Vector3.zero) {
@@ -91,6 +97,7 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 	}
 
 	private void Detect_New_pos () {
+		
 		bool mousRightButton = Input.GetMouseButton (1);
 
 		//	set a bool vaule and judge left mouse button
@@ -103,12 +110,20 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 			mousRBTiggerOnce = false;
 		else if (!mousRightButton)
 			mousRBTiggerOnceFlag = false;
-
+		
 		//	if right mouse button has been click then give mouse clcik postion to calculate path
 		if (mousRBTiggerOnce) {
+			//	double click judgement
+			if (timer <= 0f) {
+				isRunning = false;
+				timer = 0.3f;
+			} else if (timer > 0) {
+				isRunning = true;
+			}
+
 			Vector3 mousHitPos;
 			Quaternion roteTo;
-			if (Public_Functions.Mous_Click_Get_Pos_Dir (Camera.main, transform, LayerMask.GetMask ("floor"), out mousHitPos, out roteTo)) {
+			if (Public_Functions.Mous_Click_Get_Pos_Dir (Camera.main, transform, LayerMask.GetMask ("Floor"), out mousHitPos, out roteTo)) {
 				newTar = mousHitPos;
 			}
 		}
@@ -127,9 +142,12 @@ public class Selectable_Unit_Controller_AstarPathfing_Project : AIPath_For_Rigid
 
 		if (posOffset != Vector3.zero)
 			walk = true;
-		else
+		else {
 			walk = false;
+			isRunning = false;
+		}
 		
 		anime.SetBool ("IsWalking", walk);
+		anime.SetBool ("IsRunning", isRunning);
 	}
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Pathfinding;
 using Pathfinding.RVO;
 
-//0.1.2
+//0.2.2
 
 /** AI for following paths.
  * This AI is the default movement script which comes with the A* Pathfinding Project.
@@ -69,6 +69,8 @@ public class AIPath_For_Rigidbody_From_AstarPathfindingProject : MonoBehaviour {
 	//	speed for running, not yet using
 	public float Run_Speed = 2.5f;
 
+	public float Speed_Damp = 2f;
+		
 	/** Rotation speed.
 	 * Rotation is calculated using Quaternion.SLerp. This variable represents the damping, the higher, the faster it will be able to rotate.
 	 */
@@ -138,6 +140,8 @@ public class AIPath_For_Rigidbody_From_AstarPathfindingProject : MonoBehaviour {
 	//	
 	protected Vector3 newTar;
 	protected Vector3 oldTar;
+
+	protected float currentSpeed = 0f;
 
 	/** Returns if the end-of-path has been reached
 	 * \see targetReached */
@@ -309,7 +313,7 @@ public class AIPath_For_Rigidbody_From_AstarPathfindingProject : MonoBehaviour {
 
 
 			for (int i = 0; i <= steps; i++) {
-				Calculate_New_Pos_Dir(p1);
+				Calculate_New_Pos_Dir(p1, true);
 				p1 += dir;
 			}
 		}
@@ -352,9 +356,11 @@ public class AIPath_For_Rigidbody_From_AstarPathfindingProject : MonoBehaviour {
 		return dx*dx + dz*dz;
 	}
 
-	protected Vector3 Calculate_New_Pos_Dir (Vector3 currentPosition) {
-
-		if (path == null || path.vectorPath == null || path.vectorPath.Count == 0) return Vector3.zero;
+	protected Vector3 Calculate_New_Pos_Dir (Vector3 currentPosition, bool running) {
+		
+		if (path == null || path.vectorPath == null || path.vectorPath.Count == 0) {
+			return Vector3.zero;
+		}
 
 		//Debug.Log (currentPosition.x + ",  " + currentPosition.z);
 		List<Vector3> vPath = path.vectorPath;
@@ -392,20 +398,30 @@ public class AIPath_For_Rigidbody_From_AstarPathfindingProject : MonoBehaviour {
 		dir.y = 0;
 		float targetDist = dir.magnitude;
 
-		//float slowdown = Mathf.Clamp01(targetDist / slowdownDistance);
 
 		this.targetDirection = dir;
 		this.targetPoint = targetPosition;
 
-		if (currentWaypointIndex == vPath.Count-1 && targetDist <= endReachedDistance) {
-			if (!targetReached) { targetReached = true; OnTargetReached(); }
 
+		if (currentWaypointIndex == vPath.Count - 1 && targetDist <= endReachedDistance) {
+			if (!targetReached) {
+				targetReached = true;
+				OnTargetReached ();
+			}
+
+			currentSpeed = 0f;
 			//	if reach the end of path then return current position
 			return Vector3.zero;
 		}
 
-		Vector3 newOffset = Vector3.MoveTowards (transform.position, targetPosition, speed * Time.deltaTime) - transform.position;
-
+		Vector3 newOffset = Vector3.zero;
+		if (!running) {
+			Public_Functions.SMO_VAL (currentSpeed, speed, Speed_Damp * Time.deltaTime, out currentSpeed);
+			newOffset = Vector3.MoveTowards (transform.position, targetPosition, currentSpeed * Time.deltaTime) - transform.position;
+		} else if (running) {
+			Public_Functions.SMO_VAL (currentSpeed, Run_Speed, Speed_Damp * Time.deltaTime, out currentSpeed);
+			newOffset = Vector3.MoveTowards (transform.position, targetPosition, currentSpeed * Time.deltaTime) - transform.position;
+		}
 		return newOffset;
 	}
 

@@ -55,7 +55,7 @@ public class Enemy_Controller_AstarPathfinding_Project : AIPath_For_Rigidbody_Fr
 
 		//	stop move after reach miniment range
 		if (Vector3.Distance (transform.position, enemy.transform.position) > Min_Stop_Range)
-			posOffset = Calculate_New_Pos_Dir (tr.position);
+			posOffset = Calculate_New_Pos_Dir (tr.position, false);
 		else
 			posOffset = Vector3.zero;
 

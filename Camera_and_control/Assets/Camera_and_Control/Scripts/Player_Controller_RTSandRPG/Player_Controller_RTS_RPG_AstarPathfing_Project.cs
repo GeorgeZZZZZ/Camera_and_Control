@@ -5,7 +5,7 @@ using UnityEngine;
 //using System.Linq;
 using System.Text;
 
-//	0.5.6
+//	0.6.6
 [RequireComponent (typeof(Animator))]
 [RequireComponent (typeof(Rigidbody))]
 [RequireComponent (typeof(CapsuleCollider))]
@@ -19,6 +19,7 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 	public float Player_Normal_Speed=1f;
 	public float Player_Run_Speed=2.5f;
 	public float Player_Turnning_Speed=180f; //180 degree per second
+	public float Jump_Speed = 100f;
 
 	public bool Move_Player_towards_Character_Facing = false;	//	WASD control forward/ backward/ left shift/ right shift
 	public bool Move_Player_Along_World_Axis = false;	//	WASD control forward/ backward/ left shift/ right shift
@@ -46,6 +47,14 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 
 	private float newYAng;	//	y angle container, for MoTbKaCB () to calculate next character y angle depending on camera center
 
+	private bool isRunning;
+	private bool isJumpping;
+	private bool falling;
+	private int layerMaskFloor;
+	private int layerMaskObstacles;
+	private int layerMaskHeightAdjust;
+	private float jumpTimer;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -57,6 +66,9 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 		playerCam = Cam_Center_Point.GetComponent <Camera_Controller> ().Cam_Obj.GetComponent <Camera> ();
 
 		newYAng = transform.eulerAngles.y;	//	initialize value in first run
+		layerMaskFloor = LayerMask.GetMask ("Floor");
+		layerMaskObstacles = LayerMask.GetMask ("Obstacles");
+		layerMaskHeightAdjust =  LayerMask.GetMask ("HeightAdjust");
 	}
 
 	// Update is called once per physics update
@@ -72,7 +84,19 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 		float moveLR = Input.GetAxis ("Horizontal");
 		float turnLR = Input.GetAxisRaw ("Rotate");
 		bool mousLefButt = Input.GetMouseButton (0);
+		float spaceBar = Input.GetAxis ("Jump");
+		bool jump = false;
 
+		if (spaceBar != 0f && jumpTimer <= 0) {
+			jumpTimer = 1.067f;
+			isJumpping = jump = true;	//	jump function is not yet ready
+		} else if (jumpTimer <= 0) {
+			isJumpping = false;
+		}
+
+		if (jumpTimer > 0)
+			jumpTimer -= Time.deltaTime;
+		
 		if (moveFB != 0f | moveLR != 0f)
 			characterMovingFlag = true;
 		else
@@ -82,9 +106,11 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 		if (Input.GetButton ("Run")){
 			speed = Player_Run_Speed;
 			turnSpeed = Player_Turnning_Speed * 2.5f;
+			isRunning = true;
 		}else{
 			speed = Player_Normal_Speed;
 			turnSpeed = Player_Turnning_Speed;
+			isRunning = false;
 		}
 
 		if (Force_RTS_Cam_View) {
@@ -121,6 +147,9 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 				MoTbKaCB (moveFB, moveLR, speed, turnSpeed, retreatDivisor);
 			}
 
+			if (jump) {
+				JumpCharacter ();
+			}
 		} else {	//	if not follow then move camera center point directilly, keyboard now control camera
 			
 			RTS_Point_Selec (mousLefButt);
@@ -129,7 +158,7 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 		}
 
 		if (camFollowFlag)
-			Animating (moveFBForAnimeRPG, moveLRForAnimeRPG);	//	Animation management
+			Animating (moveFBForAnimeRPG, moveLRForAnimeRPG, jump);	//	Animation management
 	}
 
 	void OnGUI() {
@@ -146,6 +175,10 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 	/********************************
 	 * --- Functions
 	 ********************************/
+	//	add acceleration to rigidbody
+	private void JumpCharacter () {
+			playerRigidbody.AddForce (transform.up * Jump_Speed, ForceMode.Acceleration);
+	}
 
 	//	move or turn by keyboard according camera behavior, typical RPG control system
 	//	FB: forward/backward, LR: Left/Right, SP: Speed, RD: retreatDivisor
@@ -333,17 +366,34 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 		Quaternion roteTo;
 		Vector3 mousHitPos;
 
-		if (Public_Functions.Mous_Click_Get_Pos_Dir (playerCam, transform, LayerMask.GetMask ("floor"), out mousHitPos, out roteTo)) {
+		if (Public_Functions.Mous_Click_Get_Pos_Dir (playerCam, transform, layerMaskFloor, out mousHitPos, out roteTo)) {
 			playerRigidbody.MoveRotation (roteTo);
 		}
 		
 	}
 
 	//	Animation management
-	private void Animating (float FB, float LR){
+	private void Animating (float FB, float LR, bool JP){
 		bool walking = FB != 0f || LR != 0f;
+		bool isFall = false;
+
+		RaycastHit downwardHit;
+		Physics.Raycast (transform.position, Vector3.down, out downwardHit, 100f, layerMaskHeightAdjust);
+
+		float disBetweenCharAndFloor = downwardHit.distance - 50f;
+		if (isJumpping) {
+			walking = false;
+			isRunning = false;
+		} else if ((disBetweenCharAndFloor > 5f || disBetweenCharAndFloor <= -50) && !falling) {
+			walking = false;
+			isRunning = false;
+			falling = isFall = true;
+		}
 
 		anim.SetBool ("IsWalking", walking);
+		anim.SetBool ("IsRunning", isRunning);
+		anim.SetBool ("IsJumpping", JP);
+		anim.SetBool ("Fall", isFall);
 	}
 
 	//	force camera center stop follow player
