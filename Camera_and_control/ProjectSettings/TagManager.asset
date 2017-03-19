@@ -15,14 +15,14 @@ TagManager:
   - UI
   - 
   - 
+  - Player
+  - CharacterRagdoll
+  - Obstacles
   - Floor
   - HeightAdjust
-  - Obstacles
   - Character
   - Enemy
-  - Player
-  - 
-  - 
+  - Obstacles_Only_Affect_On_Ragdoll
   - 
   - 
   - 

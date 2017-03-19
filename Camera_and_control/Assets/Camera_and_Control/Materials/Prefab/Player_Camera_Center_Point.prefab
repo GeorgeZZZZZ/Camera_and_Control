@@ -172,24 +172,23 @@ MonoBehaviour:
   Mouse_Scroll_Sensitivity: 80
   Mouse_Scroll_SmoothDamp: 0.08
   Look_SmoothDamp: 0.05
+  Max_X_Rotation_Angle: 80
+  Min_X_Rotation_Angle: 0
   Player_Follow_SmoothDamp: 0.2
   Max_Cam_Distance: 6
   Min_Cam_Distance: 0.8
-  Max_X_Rotation_Angle: 80
-  Min_X_Rotation_Angle: 0
   RPG_Min_X_Rotation_Angle: -80
   Distance_Change_Sensitivity: 2
   Distance_Change_SmoothDamp: 0.05
   Angle_Change_Sensitivity: 2
   Edge_Boundary: 1
-  Cam_Independent_Distance_Value: 6
-  RTS_Fir_Cam_Distance: 10
-  RTS_Sec_Cam_Distance: 15
   RPG_Mid_Mous_Rote_Cam: 0
   RPG_Edge_Rote_Cam: 0
   RPG_Dir_Rote_Cam: 1
   RPG_Complet_Cam_Follow: 0
   RPG_Classic_Cam_Follow: 1
+  RTS_Fir_Cam_Distance: 10
+  RTS_Sec_Cam_Distance: 15
   RTS_Plan_Fir_View_Flag: 1
   RTS_Plan_Sec_View_Flag: 0
   RTS_Mid_Mous_Rote_Cam: 1
