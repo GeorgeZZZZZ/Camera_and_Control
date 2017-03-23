@@ -1,35 +1,42 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-//  vr: 0.1.0
+//  vr: 0.1.1
 
 [CustomEditor(typeof(Camera_Controller))]
 public class Customer_Camera_Inspector : Editor {
     Camera_Controller CC;
     bool foldRPGMode, foldRTSMode;
-    Mouse_Control_Cam_Types_In_RPG_Mode MCCTinRPG;
-    Camera_Follow_Player_Behavior CFPB;
-    Camera_Movement_Types_In_RTS_Mode CMTinRTS;
-    Mouse_Control_Cam_Types_In_RTS_Mode MCCTinRTS;
+
+    SerializedObject serOBJ;
+    SerializedProperty MCCTinRPG, CFPB, CMTinRTS, MCCTinRTS, playerOBJ, xRoteOBJ, camOBJ;
 
     private void OnEnable()
     {
         CC = (Camera_Controller) target;
+
+        serOBJ = new SerializedObject(target);
+        MCCTinRPG = serOBJ.FindProperty("MouseControlCamTypesInRPGMode");    //  find serializable enum
+        CFPB = serOBJ.FindProperty("CameraFollowPlayerBehavior");    //  find serializable enum
+        CMTinRTS = serOBJ.FindProperty("CameraMovementTypes");    //  find serializable enum
+        MCCTinRTS = serOBJ.FindProperty("MouseControlCamTypeseInRTSMode");    //  find serializable enum
+        playerOBJ = serOBJ.FindProperty("Player_Obj");
+        xRoteOBJ = serOBJ.FindProperty("X_Rote_Cent");
+        camOBJ = serOBJ.FindProperty("Cam_Obj");
     }
-
     
-
     public override void OnInspectorGUI()
     {
-
         //base.OnInspectorGUI();    //  If this code is uncomment then all original values will appear in inspector
+
+        serOBJ.Update();    //  update serializeable objs
 
         //  General Settings---------------------------
         GUILayout.Space(10);
         EditorGUILayout.LabelField("General Settings", EditorStyles.boldLabel);
-        CC.Player_Obj = (GameObject)EditorGUILayout.ObjectField("Player to be follow", CC.Player_Obj, typeof(GameObject),true);
-        CC.X_Rote_Cent = (GameObject)EditorGUILayout.ObjectField("X axis rotation center", CC.X_Rote_Cent, typeof(GameObject), true);
-        CC.Cam_Obj = (GameObject)EditorGUILayout.ObjectField("Camera", CC.Cam_Obj, typeof(GameObject), true);
+        EditorGUILayout.PropertyField(playerOBJ);
+        EditorGUILayout.PropertyField(xRoteOBJ);
+        EditorGUILayout.PropertyField(camOBJ);
 
         CC.Height_Offset = EditorGUILayout.FloatField("Height_Offset", CC.Height_Offset);
         CC.Look_Sensitivity = EditorGUILayout.FloatField("Look_Sensitivity", CC.Look_Sensitivity);
@@ -55,34 +62,35 @@ public class Customer_Camera_Inspector : Editor {
                 CC.Distance_Change_Sensitivity = EditorGUILayout.FloatField("Distance_Change_Sensitivity", CC.Distance_Change_Sensitivity);
                 CC.Distance_Change_SmoothDamp = EditorGUILayout.FloatField("Distance_Change_SmoothDamp", CC.Distance_Change_SmoothDamp);
                 CC.Angle_Change_Sensitivity = EditorGUILayout.FloatField("Angle_Change_Sensitivity", CC.Angle_Change_Sensitivity);
-                MCCTinRPG = (Mouse_Control_Cam_Types_In_RPG_Mode)EditorGUILayout.EnumPopup("Mouse control camera types", MCCTinRPG);
-                switch (MCCTinRPG)
+
+                EditorGUILayout.PropertyField(MCCTinRPG);
+                switch (MCCTinRPG.enumValueIndex)
                 {
-                    case Mouse_Control_Cam_Types_In_RPG_Mode.RPG_Mid_Mous_Rote_Cam:
-                        CC.RPG_Mid_Mous_Rote_Cam = true;
-                        CC.RPG_Edge_Rote_Cam = false;
-                        CC.RPG_Dir_Rote_Cam = false;
-                        break;
-                    case Mouse_Control_Cam_Types_In_RPG_Mode.RPG_Edge_Rote_Cam:
-                        CC.RPG_Mid_Mous_Rote_Cam = false;
-                        CC.RPG_Edge_Rote_Cam = true;
-                        CC.RPG_Dir_Rote_Cam = false;
-                        CC.Edge_Boundary = EditorGUILayout.IntField("Mouse rotation Edge boundary", CC.Edge_Boundary);
-                        break;
-                    case Mouse_Control_Cam_Types_In_RPG_Mode.RPG_Dir_Rote_Cam:
-                        CC.RPG_Mid_Mous_Rote_Cam = false;
-                        CC.RPG_Edge_Rote_Cam = false;
+                    case 0:
                         CC.RPG_Dir_Rote_Cam = true;
+                        CC.RPG_Mid_Mous_Rote_Cam = false;
+                        break;
+                    case 1:
+                        CC.RPG_Dir_Rote_Cam = false;
+                        CC.RPG_Mid_Mous_Rote_Cam = true;
+                        break;
+                    case 2:
+                        CC.RPG_Dir_Rote_Cam = false;
+                        CC.RPG_Mid_Mous_Rote_Cam = false;
                         break;
                 }
-                CFPB = (Camera_Follow_Player_Behavior)EditorGUILayout.EnumPopup("Camera follow player behavior", CFPB);
-                switch (CFPB)
+
+                if (CC.RPG_Mid_Mous_Rote_Cam)
+                    CC.RPG_Edge_Rote_Cam = EditorGUILayout.Toggle("RPG_Edge_Rote_Cam", CC.RPG_Edge_Rote_Cam);
+
+                EditorGUILayout.PropertyField(CFPB);
+                switch (CFPB.enumValueIndex)
                 {
-                    case Camera_Follow_Player_Behavior.RPG_Classic_Cam_Follow:
+                    case 0:
                         CC.RPG_Classic_Cam_Follow = true;
                         CC.RPG_Complet_Cam_Follow = false;
                         break;
-                    case Camera_Follow_Player_Behavior.RPG_Complet_Cam_Follow:
+                    case 1:
                         CC.RPG_Classic_Cam_Follow = false;
                         CC.RPG_Complet_Cam_Follow = true;
                         break;
@@ -107,65 +115,36 @@ public class Customer_Camera_Inspector : Editor {
                 }
             }
 
-            MCCTinRTS = (Mouse_Control_Cam_Types_In_RTS_Mode)EditorGUILayout.EnumPopup("Mouse control camera types", MCCTinRTS);
-            switch (MCCTinRTS)
+            EditorGUILayout.PropertyField(MCCTinRTS);
+            switch (MCCTinRTS.enumValueIndex)
             {
-                case Mouse_Control_Cam_Types_In_RTS_Mode.RTS_Complet_Cam_Follow:
-                    CC.RTS_Complet_Cam_Follow = true;
-                    CC.RTS_Mid_Mous_Rote_Cam = false;
-                    break;
-                case Mouse_Control_Cam_Types_In_RTS_Mode.RTS_Mid_Mous_Rote_Cam:
-                    CC.RTS_Complet_Cam_Follow = true;
-                    CC.RTS_Mid_Mous_Rote_Cam = false;
+                case 0:
+                    CC.RTS_Mid_Mous_Rote_Cam = true;
                     break;
             }
 
             CC.Cam_Move_Speed = EditorGUILayout.FloatField("Cam_Move_Speed", CC.Cam_Move_Speed);
-            CMTinRTS = (Camera_Movement_Types_In_RTS_Mode)EditorGUILayout.EnumPopup("Camera movement types", CMTinRTS);
-            switch (CMTinRTS)
+
+            EditorGUILayout.PropertyField(CMTinRTS);
+            switch (CMTinRTS.enumValueIndex)
             {
-                case Camera_Movement_Types_In_RTS_Mode.Move_Camera_towards_cam_Facing:
+                case 0:
                     CC.Move_Camera_towards_cam_Facing = true;
                     CC.Move_Camera_Along_World_Axis = false;
                     break;
-                case Camera_Movement_Types_In_RTS_Mode.Move_Camera_Along_World_Axis:
+                case 1:
                     CC.Move_Camera_towards_cam_Facing = false;
                     CC.Move_Camera_Along_World_Axis = true;
                     break;
             }
+            
             CC.Move_Camera_at_Edge = EditorGUILayout.Toggle("Move_Camera_at_Edge", CC.Move_Camera_at_Edge);
-
         }
 
         GUILayout.Space(10);
         EditorGUILayout.LabelField("Debug: ", EditorStyles.boldLabel);
         CC.Move_Debug = EditorGUILayout.Toggle("Move_Debug", CC.Move_Debug);
 
+        serOBJ.ApplyModifiedProperties();   //  apply serializable objs change
     }
-
-}
-
-public enum Mouse_Control_Cam_Types_In_RPG_Mode
-{
-    RPG_Dir_Rote_Cam,
-    RPG_Mid_Mous_Rote_Cam,
-    RPG_Edge_Rote_Cam
-}
-
-public enum Camera_Follow_Player_Behavior
-{
-    RPG_Classic_Cam_Follow,
-    RPG_Complet_Cam_Follow
-}
-
-public enum Camera_Movement_Types_In_RTS_Mode
-{
-    Move_Camera_towards_cam_Facing,
-    Move_Camera_Along_World_Axis
-}
-
-public enum Mouse_Control_Cam_Types_In_RTS_Mode
-{
-    RTS_Complet_Cam_Follow,
-    RTS_Mid_Mous_Rote_Cam
 }

@@ -1,13 +1,10 @@
 sceneSetups:
 - path: Assets/Camera_and_Control/Scenes/Camera_and_Control_Sample.unity
-  isLoaded: 0
-  isActive: 0
-- path: Assets/Camera_and_Control/Takohi/Examples/SimpleIK/simpleik.unity
-  isLoaded: 0
-  isActive: 0
-- path: Assets/Camera_and_Control/Scenes/PuppetMaster_and_IK_Test.unity
   isLoaded: 1
   isActive: 1
+- path: Assets/Camera_and_Control/Scenes/PuppetMaster_and_IK_Test.unity
+  isLoaded: 0
+  isActive: 0
 - path: Assets/Camera_and_Control/Plugins/RootMotion/PuppetMaster/_DEMOS/Melee.unity
   isLoaded: 0
   isActive: 0
@@ -15,5 +12,12 @@ sceneSetups:
   isLoaded: 0
   isActive: 0
 - path: Assets/Camera_and_Control/Plugins/RootMotion/PuppetMaster/_DEMOS/Falling.unity
+  isLoaded: 0
+  isActive: 0
+- path: Assets/Camera_and_Control/Plugins/RootMotion/PuppetMaster/_DEMOS/Killing.unity
+  isLoaded: 0
+  isActive: 0
+- path: Assets/Camera_and_Control/Plugins/RootMotion/PuppetMaster/_DEMOS/Creating
+    Ragdolls In Runtime.unity
   isLoaded: 0
   isActive: 0
