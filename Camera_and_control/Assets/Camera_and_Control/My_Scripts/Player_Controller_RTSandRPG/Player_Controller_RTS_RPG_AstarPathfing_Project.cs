@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Text;
 using RootMotion.Dynamics;
 
-//	0.6.8
+//	0.7.8
 
 public enum Player_Move_Behivior
 {
@@ -34,7 +34,7 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
     //
     public GameObject Cam_Center_Point;
 	public GameObject Select_Circle_Prefab;
-    public PuppetMaster PuppetM;
+    public BehaviourPuppet BehaviourPuppet;
 
     public int Edge_Boundary = 1;	//	valuable use for detect limit movement which mouse move near screen edge, unit in pixel 
 	public float Player_Normal_Speed=1f;
@@ -56,7 +56,6 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 	private Vector3 moveCalculation;
 	private Rigidbody playerRigidbody;
 	private Animator anim;
-    private BehaviourBase pupBehav;
 
 	private float speed;
 	private float turnSpeed;
@@ -91,11 +90,6 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 		layerMaskFloor = LayerMask.GetMask ("Floor");
 		layerMaskObstacles = LayerMask.GetMask ("Obstacles");
 		layerMaskHeightAdjust =  LayerMask.GetMask ("HeightAdjust");
-        
-        if (PuppetM != null)
-        {
-            pupBehav = PuppetM.GetComponent<BehaviourBase>();
-        }
 	}
 
     // Update is called once per physics update
@@ -447,9 +441,9 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 
         if (_fall)
         {
-            if (PuppetM != null)
+            if (BehaviourPuppet != null)
             {
-                //pupBehav.
+                BehaviourPuppet.SetState(BehaviourPuppet.State.Unpinned);
             }
             else
             {
@@ -460,6 +454,13 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
                 }
             }
         }
+        else
+        {
+            if (isFalling)
+            {
+                isFalling = false;
+            }
+        }
         
         return false;
     }
@@ -467,13 +468,11 @@ public class Player_Controller_RTS_RPG_AstarPathfing_Project : MonoBehaviour {
 	//	Animation management
 	private void Animating (float FB, float LR, bool JP, bool FALL){
 		bool walking = FB != 0f || LR != 0f;
-
 		
 		if (isJumpping || isFalling) {
 			walking = false;
 			isRunning = false;
 		}
-        
 
 		anim.SetBool ("IsWalking", walking);
 		anim.SetBool ("IsRunning", isRunning);

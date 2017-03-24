@@ -2,7 +2,7 @@
 using UnityEditor;
 
 
-//  vr: 0.1.0
+//  vr: 0.2.0
 
 [CustomEditor(typeof(Player_Controller_RTS_RPG_AstarPathfing_Project))]
 public class Customer_Player_Controller_RTS_RPG_AstarPathfing_Project_Inspector : Editor
@@ -10,7 +10,7 @@ public class Customer_Player_Controller_RTS_RPG_AstarPathfing_Project_Inspector 
     Player_Controller_RTS_RPG_AstarPathfing_Project CPC;
 
     SerializedObject serOBJ;
-    SerializedProperty PMB, PTB, camOBJ, selOBJ;
+    SerializedProperty PMB, PTB, camOBJ, selOBJ, pupBehav;
     
     private void OnEnable()
     {
@@ -21,6 +21,7 @@ public class Customer_Player_Controller_RTS_RPG_AstarPathfing_Project_Inspector 
         PTB = serOBJ.FindProperty("PlayerTurnBehivior");
         camOBJ = serOBJ.FindProperty("Cam_Center_Point");
         selOBJ = serOBJ.FindProperty("Select_Circle_Prefab");
+        pupBehav = serOBJ.FindProperty("BehaviourPuppet");
     }
 
     public override void OnInspectorGUI()
@@ -32,6 +33,7 @@ public class Customer_Player_Controller_RTS_RPG_AstarPathfing_Project_Inspector 
         EditorGUILayout.LabelField("General Settings", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(camOBJ);
         EditorGUILayout.PropertyField(selOBJ);
+        EditorGUILayout.PropertyField(pupBehav);
 
         CPC.Edge_Boundary = EditorGUILayout.IntField("Edge_Boundary", CPC.Edge_Boundary);
         CPC.Player_Normal_Speed = EditorGUILayout.FloatField("Player_Normal_Speed", CPC.Player_Normal_Speed);
